@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>《愛蓮說》拖曳排序與填空挑戰</title>
+  <style>
+    :root {
+      --primary-color: #2e6b56;
+      --primary-hover: #235343;
+      --bg-color: #f2f7f4;
+      --card-bg: #ffffff;
+      --border-color: #c8dcd3;
+      --text-color: #2b2b2b;
+      --success-color: #2e7d32;
+      --warning-color: #ed6c02;
+      --danger-color: #c62828;
+      --font-main: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", "Noto Serif TC", serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-main);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 20px 15px;
+      background-image: radial-gradient(#d3e4dc 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    .container {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 760px;
+      padding: 30px 24px;
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--border-color);
+      margin: auto;
+    }
+
+    .header-title {
+      text-align: center;
+      color: var(--primary-color);
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 6px;
+      letter-spacing: 2px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      font-size: 0.95rem;
+      margin-bottom: 25px;
+    }
+
+    /* 登入區 */
+    .login-box {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-top: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group label {
+      font-size: 1.05rem;
+      font-weight: bold;
+      color: #444;
+    }
+
+    input[type="text"].name-input {
+      width: 100%;
+      padding: 14px 18px;
+      font-size: 1.2rem;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      outline: none;
+      transition: all 0.25s ease;
+      text-align: center;
+      background-color: #fafcfb;
+    }
+
+    input[type="text"].name-input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(46, 107, 86, 0.15);
+      background-color: #fff;
+    }
+
+    .btn-submit {
+      background-color: var(--primary-color);
+      color: #ffffff;
+      border: none;
+      padding: 16px 24px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 12px rgba(46, 107, 86, 0.25);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.98);
+      background-color: var(--primary-hover);
+    }
+
+    /* 提示卡片 */
+    .instruction-card {
+      background: #eaf4f0;
+      border-left: 5px solid var(--primary-color);
+      padding: 16px 18px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 1.05rem;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .instruction-card .step-highlight {
+      color: var(--primary-color);
+      font-weight: bold;
+      font-size: 1.2rem;
+      text-decoration: underline;
+    }
+
+    .rules-list {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: #555;
+      margin-left: 18px;
+    }
+
+    /* 頂部資訊列 */
+    .user-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      border-bottom: 2px dashed var(--border-color);
+      font-size: 1.1rem;
+    }
+
+    /* 拖曳清單 (iPad Touch 優化) */
+    .drag-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    .drag-item {
+      display: flex;
+      align-items: center;
+      background: #fafcfb;
+      border: 2px solid #d0e2d9;
+      border-radius: 12px;
+      padding: 10px 14px;
+      gap: 12px;
+      user-select: none;
+      touch-action: pan-y;
+      transition: transform 0.15s ease, background-color 0.2s, border-color 0.2s;
+    }
+
+    .drag-item.dragging {
+      opacity: 0.6;
+      background: #dcece5;
+      border-style: dashed;
+      border-color: var(--primary-color);
+      transform: scale(1.02);
+    }
+
+    .drag-handle {
+      font-size: 1.5rem;
+      color: #7b9e91;
+      cursor: grab;
+      padding: 8px 10px;
+      touch-action: none; /* 防止 iPad 拖曳手柄時觸發整個網頁頁面滑動 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .order-badge {
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: var(--primary-color);
+      width: 26px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* 詩詞顯示文字（1.4rem） */
+    .poem-sentence {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      flex-grow: 1;
+      color: #2b2b2b;
+    }
+
+    /* 填充框字體（1.5rem，確保至少與文章文字一樣大） */
+    .blank-input {
+      width: 48px;
+      height: 48px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+      color: var(--primary-color);
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      background-color: #fff;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .blank-input:focus {
+      border-color: #1b4d3e;
+      box-shadow: 0 0 0 3px rgba(46, 107, 86, 0.2);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* 測驗結果頁面 (可向下滑動檢視錯題) */
+    .result-view {
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    /* 正中央超大分數 Hero 卡片 */
+    .hero-score-card {
+      background: #ffffff;
+      padding: 35px 25px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+      border: 4px solid var(--primary-color);
+    }
+
+    .hero-score-card h2 {
+      font-size: 2rem;
+      color: #222;
+      margin-bottom: 6px;
+    }
+
+    .student-badge-name {
+      font-size: 1.2rem;
+      color: #666;
+      margin-bottom: 15px;
+    }
+
+    .score-badge-box {
+      background: #eaf4f0;
+      border: 2px dashed #b5d5c8;
+      border-radius: 16px;
+      padding: 20px;
+      margin: 15px 0;
+    }
+
+    .big-score-num {
+      font-size: 5.5rem;
+      font-weight: 900;
+      color: var(--primary-color);
+      line-height: 1;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.08);
+    }
+
+    .score-total-label {
+      font-size: 1.1rem;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    .scroll-hint-banner {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 10px 18px;
+      background-color: #dbece4;
+      color: var(--primary-color);
+      border-radius: 20px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      animation: bounce 1.8s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-6px); }
+      60% { transform: translateY(-3px); }
+    }
+
+    /* 下方錯題與答題解析區 */
+    .review-section {
+      background: #ffffff;
+      padding: 28px 22px;
+      border-radius: 18px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+      border: 1px solid var(--border-color);
+    }
+
+    .review-section h3 {
+      font-size: 1.35rem;
+      color: var(--primary-color);
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e0ede7;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .review-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .review-card {
+      border: 1.5px solid #d0e2d9;
+      border-radius: 12px;
+      padding: 15px 16px;
+      background: #fbfdfe;
+    }
+
+    .review-card.status-correct {
+      border-color: #a5d6a7;
+      background-color: #f1f8e9;
+    }
+
+    .review-card.status-blank-error {
+      border-color: #ffe0b2;
+      background-color: #fffde7;
+    }
+
+    .review-card.status-order-error {
+      border-color: #ffcdd2;
+      background-color: #ffebee;
+    }
+
+    .review-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    .pos-label {
+      font-weight: bold;
+      color: #555;
+    }
+
+    .status-tag {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    .tag-correct { background: #c8e6c9; color: var(--success-color); }
+    .tag-blank-error { background: #ffe0b2; color: var(--warning-color); }
+    .tag-order-error { background: #ffcdd2; color: var(--danger-color); }
+
+    .review-content {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #222;
+      margin: 6px 0;
+      letter-spacing: 1px;
+    }
+
+    .review-detail-msg {
+      font-size: 0.92rem;
+      color: #555;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    .char-correct { color: var(--success-color); font-weight: bold; }
+    .char-wrong { color: var(--danger-color); text-decoration: line-through; margin-right: 4px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <!-- 1. 學生登入畫面 -->
+  <div id="login-screen" class="container">
+    <h1 class="header-title">《愛蓮說》經典測驗</h1>
+    <p class="subtitle">請輸入姓名進入遊戲（限答題一次）</p>
+
+    <div class="login-box">
+      <div class="form-group">
+        <label for="student-name-input">學生姓名</label>
+        <input type="text" id="student-name-input" class="name-input" placeholder="請在此輸入您的姓名" maxlength="10" autocomplete="off">
+      </div>
+      <button class="btn-submit" onclick="startGame()">開始測驗</button>
+    </div>
+  </div>
+
+  <!-- 2. 遊戲測驗主畫面 -->
+  <div id="game-screen" class="container hidden">
+    <div class="user-bar">
+      <span>考生姓名：<strong id="display-name" style="color: var(--primary-color);">--</strong></span>
+      <span style="font-size: 0.95rem; color: #666;">7 句 / 滿分 100 分</span>
+    </div>
+
+    <!-- 提示語 -->
+    <div class="instruction-card">
+      📌 提示：請學生<span class="step-highlight">「先」</span>拖曳排序文章句子順序，<span class="step-highlight">「再」</span>於框內填充缺字的答案。
+      <ul class="rules-list">
+        <li>每句基礎分 14 分，錯 1 個字扣 2 分（全對滿分 100 分）。</li>
+        <li><strong>注意：若該句順序錯誤，即使填空寫對亦得 0 分。</strong></li>
+      </ul>
+    </div>
+
+    <!-- 詩詞拖曳清單 -->
+    <div id="drag-list" class="drag-list"></div>
+
+    <button class="btn-submit" style="width: 100%; margin-top: 10px;" onclick="submitGame()">提交答案（確認後不可修改）</button>
+  </div>
+
+  <!-- 3. 測驗結果畫面 (正中央超大分數 + 可滑動觀看錯題解析) -->
+  <div id="result-screen" class="result-view hidden">
+    
+    <!-- 頂部正中央超大分數 Hero 卡片 -->
+    <div class="hero-score-card">
+      <h2>測驗成績單</h2>
+      <p class="student-badge-name" id="result-student-name">考生：--</p>
+
+      <div class="score-badge-box">
+        <div class="big-score-num" id="result-score-num">0</div>
+        <div class="score-total-label">總分 / 100 分</div>
+      </div>
+
+      <p style="font-size: 0.9rem; color: #888; margin-bottom: 8px;">🔒 測驗已結束，成績已成功記錄且不可重測。</p>
+      
+      <div class="scroll-hint-banner">
+        <span>⬇️ 往下滑動觀看錯題與答題解析 ⬇️</span>
+      </div>
+    </div>
+
+    <!-- 下方錯題檢視區塊 -->
+    <div class="review-section">
+      <h3>
+        <span>答題檢視與錯題分析</span>
+        <span style="font-size: 0.9rem; font-weight: normal; color: #666;">（共 7 句）</span>
+      </h3>
+      <div id="review-list" class="review-list"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // 正確《愛蓮說》文章句序 (從「水陸草木之花」至「濯清漣而不妖」，共7句)
+    const originalPoem = [
+      { id: 1, full: "水陸草木之花", blanks: [2, 3] },            // 水 陸 [草] [木] 之 花 (留2字)
+      { id: 2, full: "可愛者甚蕃", blanks: [0, 1, 4] },           // [可] [愛] 者 甚 [蕃] (留3字)
+      { id: 3, full: "晉陶淵明獨愛菊", blanks: [1, 2, 3, 6] },    // 晉 [陶] [淵] [明] 獨 愛 [菊] (留4字)
+      { id: 4, full: "自李唐來", blanks: [1, 2] },                // 自 [李] [唐] 來 (留2字)
+      { id: 5, full: "世人甚愛牡丹", blanks: [0, 1, 4, 5] },       // [世] [人] 甚 愛 [牡] [丹] (留4字)
+      { id: 6, full: "予獨愛蓮之出淤泥而不染", blanks: [0, 2, 5, 6, 9] }, // [予] 獨 [愛] 蓮 之 [出] [淤] 泥 而 [不] 染 (留5字)
+      { id: 7, full: "濯清漣而不妖", blanks: [0, 2, 3, 4, 5, 6] } // [濯] 清 [漣] [而] [不] [妖] (留5字/多字填充)
+    ];
+
+    let currentList = [];
+    let playerName = "";
+    let activeTouchIdx = null;
+
+    // 頁面載入時檢查是否已有遊玩記錄
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedRecord = localStorage.getItem("ailiansuo_ipad_quiz_record");
+      if (savedRecord) {
+        try {
+          const record = JSON.parse(savedRecord);
+          showFinalResultScreen(record.name, record.score, record.reviewDetails);
+        } catch(e) {
+          console.error(e);
+        }
+      }
+    });
+
+    // 開始測驗
+    function startGame() {
+      const input = document.getElementById("student-name-input").value.trim();
+      if (!input) {
+        alert("請先輸入姓名！");
+        return;
+      }
+      playerName = input;
+
+      // 深拷貝並隨機打亂順序
+      currentList = JSON.parse(JSON.stringify(originalPoem));
+      do {
+        currentList.sort(() => Math.random() - 0.5);
+      } while (isAlreadyCorrectOrder()); // 避免預設就剛好排對
+
+      // 初始化學生輸入暫存
+      currentList.forEach(item => {
+        item.userInputs = {};
+      });
+
+      document.getElementById("display-name").innerText = playerName;
+      document.getElementById("login-screen").classList.add("hidden");
+      document.getElementById("game-screen").classList.remove("hidden");
+
+      renderDragList();
+    }
+
+    function isAlreadyCorrectOrder() {
+      for (let i = 0; i < currentList.length; i++) {
+        if (currentList[i].id !== originalPoem[i].id) return false;
+      }
+      return true;
+    }
+
+    // 儲存目前所有輸入框文字，避免拖曳順序時學生打好的文字丟失
+    function saveCurrentInputs() {
+      const rows = document.querySelectorAll('.drag-item');
+      rows.forEach(row => {
+        const rowIdx = parseInt(row.dataset.index);
+        const inputs = row.querySelectorAll('.blank-input');
+        inputs.forEach(input => {
+          const charIdx = parseInt(input.dataset.charIdx);
+          if (currentList[rowIdx]) {
+            currentList[rowIdx].userInputs[charIdx] = input.value.trim();
+          }
+        });
+      });
+    }
+
+    // 渲染詩詞清單
+    function renderDragList() {
+      const container = document.getElementById("drag-list");
+      container.innerHTML = "";
+
+      currentList.forEach((item, index) => {
+        const row = document.createElement("div");
+        row.className = "drag-item";
+        row.dataset.index = index;
+
+        // 拖曳 Handle
+        const handle = document.createElement("div");
+        handle.className = "drag-handle";
+        handle.innerHTML = "☰";
+
+        // 綁定 iPad 觸控拖曳事件 (Touch Events)
+        handle.addEventListener("touchstart", (e) => handleTouchStart(e, index), { passive: false });
+        handle.addEventListener("touchmove", handleTouchMove, { passive: false });
+        handle.addEventListener("touchend", handleTouchEnd, { passive: false });
+
+        // 電腦滑鼠 Drag & Drop 支援
+        row.draggable = true;
+        row.addEventListener("dragstart", (e) => {
+          saveCurrentInputs();
+          activeTouchIdx = index;
+          row.classList.add("dragging");
+        });
+        row.addEventListener("dragover", (e) => e.preventDefault());
+        row.addEventListener("drop", (e) => {
+          e.preventDefault();
+          saveCurrentInputs();
+          const targetIdx = parseInt(row.dataset.index);
+          if (activeTouchIdx !== null && activeTouchIdx !== targetIdx) {
+            const movedItem = currentList.splice(activeTouchIdx, 1)[0];
+            currentList.splice(targetIdx, 0, movedItem);
+            renderDragList();
+          }
+        });
+        row.addEventListener("dragend", () => {
+          activeTouchIdx = null;
+          row.classList.remove("dragging");
+        });
+
+        // 順序號碼
+        const orderBadge = document.createElement("div");
+        orderBadge.className = "order-badge";
+        orderBadge.innerText = index + 1;
+
+        // 文章內容與大字體填空框
+        const sentenceBox = document.createElement("div");
+        sentenceBox.className = "poem-sentence";
+
+        for (let i = 0; i < item.full.length; i++) {
+          if (item.blanks.includes(i)) {
+            const input = document.createElement("input");
+            input.type = "text";
+            input.className = "blank-input";
+            input.maxLength = 1;
+            input.dataset.charIdx = i;
+            input.value = item.userInputs[i] || "";
+
+            // 阻止 input 獲得焦點時觸發拖曳
+            input.addEventListener("touchstart", (e) => e.stopPropagation());
+            input.oninput = (e) => {
+              item.userInputs[i] = e.target.value.trim();
+            };
+
+            sentenceBox.appendChild(input);
+          } else {
+            const span = document.createElement("span");
+            span.innerText = item.full[i];
+            sentenceBox.appendChild(span);
+          }
+        }
+
+        row.appendChild(handle);
+        row.appendChild(orderBadge);
+        row.appendChild(sentenceBox);
+        container.appendChild(row);
+      });
+    }
+
+    /* iPad 觸控拖曳 Swap 邏輯 */
+    function handleTouchStart(e, index) {
+      saveCurrentInputs();
+      activeTouchIdx = index;
+      const row = e.target.closest('.drag-item');
+      if (row) row.classList.add("dragging");
+    }
+
+    function handleTouchMove(e) {
+      if (activeTouchIdx === null) return;
+      if (e.cancelable) e.preventDefault(); // 防止拖曳時整個網頁跟著滑動
+
+      const touch = e.touches[0];
+      const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (!targetEl) return;
+
+      const itemEl = targetEl.closest('.drag-item');
+      if (itemEl && itemEl.dataset.index !== undefined) {
+        const targetIdx = parseInt(itemEl.dataset.index);
+        if (targetIdx !== activeTouchIdx) {
+          // 交換位置
+          const movedItem = currentList.splice(activeTouchIdx, 1)[0];
+          currentList.splice(targetIdx, 0, movedItem);
+          activeTouchIdx = targetIdx;
+          renderDragList();
+          
+          // 維持高亮拖曳中狀態
+          const newRows = document.querySelectorAll('.drag-item');
+          if (newRows[activeTouchIdx]) newRows[activeTouchIdx].classList.add("dragging");
+        }
+      }
+    }
+
+    function handleTouchEnd(e) {
+      activeTouchIdx = null;
+      renderDragList();
+    }
+
+    // 計算分數並提交
+    function submitGame() {
+      saveCurrentInputs();
+      if (!confirm("確定要提交答案嗎？提交後無法修改！")) return;
+
+      let rawTotalScore = 0;
+      let allCorrect = true;
+      let reviewDetails = [];
+
+      // 7 句依序核對
+      for (let i = 0; i < 7; i++) {
+        const targetOriginal = originalPoem[i]; // 第 i 位置正確應有的句子
+        const studentRow = currentList[i];       // 學生擺放在第 i 位置的句子
+
+        let isOrderCorrect = (studentRow.id === targetOriginal.id);
+        let itemScore = 0;
+        let status = "";
+        let detailMsg = "";
+
+        if (!isOrderCorrect) {
+          // 順序錯，得 0 分
+          allCorrect = false;
+          itemScore = 0;
+          status = "status-order-error";
+          detailMsg = `順序錯誤（此位置正確應為：「${targetOriginal.full}」）`;
+        } else {
+          // 順序正確，核對填空字
+          let wrongCount = 0;
+          let studentDisplayChars = [];
+
+          for (let c = 0; c < targetOriginal.full.length; c++) {
+            if (targetOriginal.blanks.includes(c)) {
+              const studentChar = (studentRow.userInputs[c] || "").trim();
+              const correctChar = targetOriginal.full[c];
+              if (studentChar !== correctChar) {
+                wrongCount++;
+                allCorrect = false;
+                studentDisplayChars.push(`<span class="char-wrong">${studentChar || '空'}</span><span class="char-correct">(${correctChar})</span>`);
+              } else {
+                studentDisplayChars.push(`<span class="char-correct">${correctChar}</span>`);
+              }
+            } else {
+              studentDisplayChars.push(targetOriginal.full[c]);
+            }
+          }
+
+          if (wrongCount === 0) {
+            itemScore = 14;
+            status = "status-correct";
+            detailMsg = "完全正確！得分 14 分";
+          } else {
+            itemScore = Math.max(0, 14 - wrongCount * 2);
+            status = "status-blank-error";
+            detailMsg = `順序正確，但填字錯誤 ${wrongCount} 字（扣 ${wrongCount * 2} 分）；正確結果：${studentDisplayChars.join('')}`;
+          }
+        }
+
+        rawTotalScore += itemScore;
+
+        reviewDetails.push({
+          pos: i + 1,
+          studentFullText: getStudentSentenceText(studentRow),
+          correctFullText: targetOriginal.full,
+          itemScore,
+          status,
+          detailMsg
+        });
+      }
+
+      // 滿分平滑修飾：若全部正確，自動補足至滿分 100 分
+      let finalScore = allCorrect ? 100 : rawTotalScore;
+
+      // 儲存紀錄至 LocalStorage
+      const record = {
+        name: playerName,
+        score: finalScore,
+        reviewDetails: reviewDetails
+      };
+      localStorage.setItem("ailiansuo_ipad_quiz_record", JSON.stringify(record));
+
+      showFinalResultScreen(playerName, finalScore, reviewDetails);
+    }
+
+    // 組合學生答題文字供檢視
+    function getStudentSentenceText(item) {
+      let str = "";
+      for (let i = 0; i < item.full.length; i++) {
+        if (item.blanks.includes(i)) {
+          str += (item.userInputs[i] || "＿");
+        } else {
+          str += item.full[i];
+        }
+      }
+      return str;
+    }
+
+    // 顯示結果與錯題解析頁面
+    function showFinalResultScreen(name, score, reviewDetails) {
+      document.getElementById("login-screen").classList.add("hidden");
+      document.getElementById("game-screen").classList.add("hidden");
+
+      document.getElementById("result-student-name").innerText = `考生：${name}`;
+      document.getElementById("result-score-num").innerText = score;
+
+      // 渲染錯題解析清單
+      const reviewContainer = document.getElementById("review-list");
+      reviewContainer.innerHTML = "";
+
+      if (reviewDetails && reviewDetails.length > 0) {
+        reviewDetails.forEach(item => {
+          const card = document.createElement("div");
+          card.className = `review-card ${item.status}`;
+
+          let statusTagText = "";
+          let statusTagClass = "";
+
+          if (item.status === "status-correct") {
+            statusTagText = "完全正確";
+            statusTagClass = "tag-correct";
+          } else if (item.status === "status-blank-error") {
+            statusTagText = `填字錯誤 (+${item.itemScore})`;
+            statusTagClass = "tag-blank-error";
+          } else {
+            statusTagText = "順序錯誤 (+0)";
+            statusTagClass = "tag-order-error";
+          }
+
+          card.innerHTML = `
+            <div class="review-card-header">
+              <span class="pos-label">第 ${item.pos} 句</span>
+              <span class="status-tag ${statusTagClass}">${statusTagText}</span>
+            </div>
+            <div class="review-content">您的作答：${item.studentFullText}</div>
+            <div class="review-detail-msg">${item.detailMsg}</div>
+          `;
+
+          reviewContainer.appendChild(card);
+        });
+      }
+
+      document.getElementById("result-screen").classList.remove("hidden");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>
